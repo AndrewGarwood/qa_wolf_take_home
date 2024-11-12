@@ -1,0 +1,139 @@
+https://learn.microsoft.com/en-us/training/modules/build-with-playwright/
+Playwright Core Concepts
+    Concept	Description
+    TestConfig	Configure Playwright Test Runner using File (static) or API (dynamic)
+    TestProject	Logical group of tests running same TestConfig and can be defined using filter.
+    Test Timeout	Global (per test run), Default (per test), Expect Timeouts, Fixture Timeouts
+    Fixtures	Core to Playwright test isolation. Set environment - see built-in options.
+    Navigation	Using page.goto() options to craft multi-page testing workflows
+    Locators	Core to Playwright auto-wait and auto-retry. Action finds target elements.
+    Assertions	Core to Playwright validation of expected outcomes based on actions.
+    Annotations	Tag tests to provide added context to deal with failures, focus, flakiness.
+    use Options	Configure Browser (project) or BrowserContext (context) within scope.
+    Page Object Models	Represent UI components by "Objects" and associate testing logic for reuse
+
+Playwright Core Tools
+    Playwright Test	The Playwright Test Runner and default CLI
+    Playwright Extension	The Playwright Extension for Visual Studio Code
+    Codegen	Playwright Test Generator (for automated authoring)
+    UI Mode	Playwright Time Travel Experience (with Watch Mode)
+    Trace Viewer	Graphical UI for exploring recorded Playwright traces.
+    VS Code Debugger	Powerful debugging support using Visual Studio Code Extension.
+    Playwright Inspector	Powerful debugging support from Playwright Command line.
+    Built-in Reporters	Flexible reporting options, with support for customization.
+    Continuous Integration	Support for wide range of CI providers (with sample config).
+
+---- UNIT 3: Exercise: Getting Started with Playwright ----------------
+mkdir learn-playwright
+cd learn-playwright
+npm init playwright@latest
+...
+✔ Success! Created a Playwright Test project at /learn-playwright
+
+Inside that directory, you can run several commands:
+  npx playwright test
+    Runs the end-to-end tests.
+  npx playwright test --ui
+    Starts the interactive UI mode.
+  npx playwright test --project=chromium
+    Runs the tests only on Desktop Chrome.
+  npx playwright test example
+    Runs the tests in a specific file.
+  npx playwright test --debug
+    Runs the tests in debug mode.
+  npx playwright codegen
+    Auto generate tests with Codegen.
+
+We suggest that you begin by typing:
+    npx playwright test
+
+And check out the following files:
+  - ./tests/example.spec.ts - Example end-to-end test
+  - ./tests-examples/demo-todo-app.spec.ts - Demo Todo App end-to-end tests
+  - ./playwright.config.ts - Playwright Test configuration
+
+Visit https://playwright.dev/docs/intro for more information. 
+
+The output tells us that a new npm project is created with a package.json file, 
+and that Playwright Test is installed. It also tells us the files that have been created:
+    playwright.config.ts             - the Playwright Test Configuration file.
+    .github/workflows/playwright.yml - GitHub Action for automating tests
+    tests/                           - top-level folder that Playwright searches recursively for tests with an example test script.
+    tests-examples/                  - staging folder with a demo todo app test script to try out.
+    package.json                     - the npm project file.
+--------
+When we run the command "npx playwright test", you see the following output:
+    Running 6 tests using 5 workers
+        6 passed (4.0s)
+
+- Playwright runs tests in parallel. It uses workers for it. 
+- The number of CPU cores available determines the number of workers. 
+- Playwright uses half of the available CPU cores.
+
+To open last HTML report run:
+    npx playwright show-report
+- "Serving HTML report at http://localhost:9323. Press Ctrl+C to quit."
+    The report gives us the following insights:
+        - We have two test cases ("has title", "get started link")
+        - We ran each across three browser engines (chromium, Firefox, webkit)
+        - The test cases were defined in the example.spec.ts file
+        - The test run took 4.0s with all six tests passing (none skipped)
+    Clicking on a particular row gives you the detailed run of that test case. For example, if we select on the first one, we get the following details:
+        - The test is called "has title"
+        - The file name is example.spec.ts and the line number is 3
+        - The test case was run on Chromium
+        - The "Before Hooks" ran first. It launches the browser and sets the browser and page context (fixtures) for test isolation.
+        - The Test "Action" on line 4 ran next. It resulted in navigation to a specific page.
+        - Then the Test "Assertion" on line 7 executes. It validates that the page has a specific title.
+        - The "After Hooks" run last. They take any context cleanup actions needed.
+        - The test case took "424 ms" to complete.
+
+To run our test only on the Chromium browser, we can use the --project option.
+    npx playwright test --project chromium
+
+---- UNIT 4: Exercise: Deconstruct a Playwright Test ----------------
+Emulation https://playwright.dev/docs/emulation
+
+device profiles - https://github.com/microsoft/playwright/blob/main/packages/playwright-core/src/server/deviceDescriptorsSource.json
+ - can select device profile and add it as a new project in the configuration file.
+
+----
+use Options https://playwright.dev/docs/test-use-options
+Playwright has a use property to configure the Test Runner for the following features:
+    Basic     - set baseURL (maps to "/" route) 
+                and storageState (for example, load auth).
+    Emulation - emulates a real device, for example, mobile or tablet
+    Network   - configure connections, 
+                for example, provide credentials for HTTP auth
+    Recording - capture traces to help with debugging, or screenshots or video.
+              - allows us to get a visual and system level understanding 
+                of what happens in test execution
+              - Turning on traces and recording media are time-intensive 
+                actions and should be used with discretion.
+
+---- UNIT 5: Understand Test Specification ----------------
+definition: each test() method is a "Test Case" https://playwright.dev/docs/api/class-testcase
+definition: each executable statement in a Test Case is a "test action" that can be tracked in the reporter, trace-viewer, or UI mode tooling flows.
+for each project in config
+    for each Test Case:
+        project.instantiate Test Case
+Test cases can be grouped explicitly into "Test Suites" 
+    using the test.describe() function. https://playwright.dev/docs/api/class-suite
+Test cases are grouped implicitly into Suites 
+    based on the project they belong to, and the file they're contained in, 
+    which allows Playwright to target groups of tests in various ways for execution.
+Every test run has a Root suite, with 
+    a child Project suite for each configured project. 
+    Project suites have child File suites for each test specification 
+    identified for that run. 
+    The File suite can have Test Case objects (individual) and 
+    Test Suite objects (explicitly grouped using describe) as children.
+for each Test Run
+    define Root Suite
+for each Root Suite
+    for each project in config
+        define child Project Suite
+        for each Test Specification
+            define child File Suite in Project Suite
+            // File Suite children can include individual Test Case objects
+            // and grouped Test Suite objects (grouped using describe)
